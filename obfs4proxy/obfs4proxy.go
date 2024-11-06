@@ -41,7 +41,7 @@ import (
 	"sync"
 	"syscall"
 
-	"gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
+	pt "gitlab.torproject.org/tpo/anti-censorship/pluggable-transports/goptlib"
 	"golang.org/x/net/proxy"
 
 	"gitlab.com/yawning/obfs4.git/common/log"
@@ -53,7 +53,7 @@ import (
 const (
 	obfs4proxyVersion = "0.0.15-dev"
 	obfs4proxyLogFile = "obfs4proxy.log"
-	socksAddr         = "127.0.0.1:0"
+	socksAddr         = "127.0.0.1"
 )
 
 var (
@@ -90,7 +90,14 @@ func clientSetup() (bool, []net.Listener) {
 			continue
 		}
 
-		ln, err := net.Listen("tcp", socksAddr)
+		port := os.Getenv("OBFS4_CLIENT_PORT")
+
+		if port == "" {
+			log.Infof("Using random client port as `OBFS4_CLIENT_PORT` not set")
+			port = "0"
+		}
+
+		ln, err := net.Listen("tcp", socksAddr+":"+port)
 		if err != nil {
 			_ = pt.CmethodError(name, err.Error())
 			continue
